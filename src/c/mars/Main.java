@@ -7,82 +7,17 @@ import java.util.concurrent.*;
 public class Main {
 
     public static void main(String[] args) {
-//        this is framework-based work - cool, but sometimes can't be applied
-//        FutureTask<String> futureTask = new FutureTask<String>(new PromiseCallable());
-//        ExecutorService executorService = Executors.newSingleThreadExecutor();
-//        Future<String> future = executorService.submit(new Callable<String>() {
-//            @Override
-//            public String call() throws Exception {
-//                System.out.println("call");
-//                TimeUnit.SECONDS.sleep(3);
-//                System.out.println("call finished");
-//                return "spaceX";
-//            }
-//        });
-//        executorService.shutdown();
-
-//        this is manual creation of the future - almost universal
-//        RunnableFuture<String> future = new RunnableFuture<String>() {
-//            private String r;
-//            private boolean done;
-//
-//            @Override
-//            public boolean cancel(boolean mayInterruptIfRunning) {
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean isCancelled() {
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean isDone() {
-//                return done;
-//            }
-//
-//            @Override
-//            public String get() throws InterruptedException, ExecutionException {
-//                synchronized (this) {
-//                    System.out.println("wait");
-//                    wait();
-//                    System.out.println("wait finished");
-//                }
-//                return r;
-//            }
-//
-//            @Override
-//            public String get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-//                synchronized (this) {
-//                    System.out.println("wait");
-//                    wait();
-//                    System.out.println("wait finished");
-//                }
-//                return r;
-//            }
-//
-//            @Override
-//            public void run() {
-//                done = false;
-//                r = doJob();
-//                done = true;
-//
-//                synchronized (this) {
-//                    notifyAll();
-//                }
-//            }
-//        };
-//        new Thread(future).start();
-//        System.out.println("thread started");
 
 //        using CallableFuture
         final CallableFuture<String> callableFuture = new CallableFuture<String>(new Callable<String>() {
             @Override
             public String call() throws Exception {
+//                this should be returned after outer callback done
                 return "get some!";
             }
         });
 
+//        this thread emulates outer callback that can be performed at anytime from outside
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -92,13 +27,16 @@ public class Main {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 System.out.println("outer callback - callableFuture.call()");
+//                callableFuture can be called from anywhere - and it should trigger unblocking of .get()
                 callableFuture.call();
                 System.out.println("callableFuture.called");
             }
         }).start();
 
         try {
+//            .get() acts as usual Future - it blocks until any outer thread or callback trigger futureCallable.call()
             System.out.println("result: "+callableFuture.get());
         } catch (InterruptedException e) {
             e.printStackTrace();
