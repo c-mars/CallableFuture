@@ -45,15 +45,4 @@ public class Main {
         }
 
     }
-
-    public static String doJob() {
-        System.out.println("doing job");
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("job completed");
-        return "super product";
-    }
 }
