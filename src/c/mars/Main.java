@@ -1,7 +1,5 @@
 package c.mars;
 
-import jdk.nashorn.internal.codegen.CompilerConstants;
-
 import java.util.concurrent.*;
 
 public class Main {
@@ -9,15 +7,16 @@ public class Main {
     public static void main(String[] args) {
 
 //        using CallableFuture
-        final CallableFuture<String> callableFuture = new CallableFuture<String>(new Callable<String>() {
+        System.out.println(">> callableFuture created");
+        final CallableFuture<String, Integer> callableFuture = new CallableFuture<String, Integer>(new CallableFuture.CallableWithArg<String, Integer>() {
             @Override
-            public String call() throws Exception {
-//                this should be returned after outer callback done
-                return "get some!";
+            public String call(Integer integer) {
+                return "result status: "+integer;
             }
         });
 
 //        this thread emulates outer callback that can be performed at anytime from outside
+        System.out.println(">> callableFuture submitted to new thread");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -28,16 +27,17 @@ public class Main {
                     e.printStackTrace();
                 }
 
-                System.out.println("outer callback - callableFuture.call()");
+                System.out.println(">> calling callableFuture.call() from a thread with argument 66");
 //                callableFuture can be called from anywhere - and it should trigger unblocking of .get()
-                callableFuture.call();
-                System.out.println("callableFuture.called");
+                callableFuture.call(66);
+                System.out.println("callableFuture called");
             }
         }).start();
 
         try {
 //            .get() acts as usual Future - it blocks until any outer thread or callback trigger futureCallable.call()
-            System.out.println("result: "+callableFuture.get());
+            System.out.println(">> waiting for result in main()...");
+            System.out.println(">> result obtained: "+callableFuture.get());
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {

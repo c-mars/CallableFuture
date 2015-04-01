@@ -1,90 +1,85 @@
 package c.mars;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Constantine Mars on 4/1/15.
  *
  * can be called and can return future
+ * another words, it's the mutex that returns value as response for some asynchronous call
  */
-public class CallableFuture<T> {
-    public CallableFuture(Callable<T> callable) {
+public class CallableFuture<T, U> implements RunnableFuture<T> {
+
+    private CallableWithArg<T, U> callable;
+    private T result;
+    private U arg;
+    private boolean done;
+
+    public CallableFuture(CallableWithArg<T, U> callable) {
         this.callable = callable;
     }
 
-    private Callable<T> callable;
-    private RunnableFuture<T> runnableFuture;
-
-    public void call() {
-        runnableFuture = getRunnableFuture();
-        new Thread(runnableFuture).start();
+    public void call(U arg) {
+        this.arg = arg;
+        new Thread(this).start();
     }
 
-    public T get() throws ExecutionException, InterruptedException {
-        return getRunnableFuture().get();
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        return false;
     }
 
-    private RunnableFuture<T> getRunnableFuture() {
-        if (runnableFuture == null) {
-            runnableFuture = new RunnableFutureImpl();
-        }
-        return runnableFuture;
+    @Override
+    public boolean isCancelled() {
+        return false;
     }
 
-    private class RunnableFutureImpl implements RunnableFuture<T> {
+    @Override
+    public boolean isDone() {
+        return done;
+    }
 
-        private T result;
-        private boolean done;
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return false;
+    @Override
+    public T get() throws InterruptedException, ExecutionException {
+        synchronized (this) {
+            System.out.println("wait");
+            wait();
+            System.out.println("wait finished");
         }
+        return result;
+    }
 
-        @Override
-        public boolean isCancelled() {
-            return false;
+    @Override
+    public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException
+    {
+        synchronized (this) {
+            System.out.println("wait");
+            wait();
+            System.out.println("wait finished");
         }
+        return result;
+    }
 
-        @Override
-        public boolean isDone() {
-            return done;
+    @Override
+    public void run() {
+        done = false;
+        try {
+            result = callable.call(arg);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        done = true;
 
-        @Override
-        public T get() throws InterruptedException, ExecutionException {
-            synchronized (this) {
-                System.out.println("wait");
-                wait();
-                System.out.println("wait finished");
-            }
-            return result;
+        System.out.println("run() done - calling notifyAll");
+        synchronized (this) {
+            notifyAll();
         }
+    }
 
-        @Override
-        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException
-        {
-            synchronized (this) {
-                System.out.println("wait");
-                wait();
-                System.out.println("wait finished");
-            }
-            return result;
-        }
-
-        @Override
-        public void run() {
-            done = false;
-            try {
-                result = callable.call();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            done = true;
-
-            synchronized (this) {
-                notifyAll();
-            }
-        }
+    public interface CallableWithArg<T, U> {
+        T call(U u);
     }
 }
