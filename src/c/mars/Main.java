@@ -6,12 +6,11 @@ public class Main {
 
     public static void main(String[] args) {
 
-//        using CallableFuture
         System.out.println(">> callableFuture created");
         final CallableFuture<String, Integer> callableFuture = new CallableFuture<String, Integer>(new CallableFuture.CallableWithArg<String, Integer>() {
             @Override
             public String call(Integer integer) {
-                return "result status: "+integer;
+                return "\"resulting status is "+integer+"\"";
             }
         });
 
@@ -20,9 +19,13 @@ public class Main {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                System.out.println("outer thread...");
+                System.out.println("outer thread is running...");
                 try {
-                    TimeUnit.SECONDS.sleep(5);
+                    int steps = 5;
+                    for (int i=0; i<steps; i++) {
+                        TimeUnit.SECONDS.sleep(1);
+                        System.out.println("running... ["+(i+1)*100/steps+"%]");
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -30,7 +33,7 @@ public class Main {
                 System.out.println(">> calling callableFuture.call() from a thread with argument 66");
 //                callableFuture can be called from anywhere - and it should trigger unblocking of .get()
                 callableFuture.call(66);
-                System.out.println("callableFuture called");
+                System.out.println("callableFuture was called");
             }
         }).start();
 
