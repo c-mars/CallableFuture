@@ -33,6 +33,7 @@ public class CallableFuture<T, U> implements RunnableFuture<T> {
 
     public CallableFuture(CallableWithArg<T, U> callable, U arg) {
         this.callable = callable;
+        this.arg = arg;
         result = this.callable.call(this.arg);
     }
 
