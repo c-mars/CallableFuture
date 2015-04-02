@@ -10,6 +10,10 @@ public class SimpleCallableFuture<T> extends CallableFuture<T, T> {
         super(new SimpleCallableWithArg<T>());
     }
 
+    public SimpleCallableFuture(T arg) {
+        super(new SimpleCallableWithArg<T>(), arg);
+    }
+
     public static class SimpleCallableWithArg<T> implements CallableWithArg<T, T> {
         @Override
         public T call(T arg) {
