@@ -25,6 +25,17 @@ public class CallableFuture<T, U> implements RunnableFuture<T> {
         new Thread(this).start();
     }
 
+//    unlocks get immediately
+    public void setArg(U arg) {
+        this.arg = arg;
+        result = this.callable.call(this.arg);
+    }
+
+    public CallableFuture(CallableWithArg<T, U> callable, U arg) {
+        this.callable = callable;
+        result = this.callable.call(this.arg);
+    }
+
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
         return false;
@@ -42,14 +53,22 @@ public class CallableFuture<T, U> implements RunnableFuture<T> {
 
     @Override
     public T get() throws InterruptedException, ExecutionException {
-        synchronized (this) { wait(); }
+        if (result == null) {
+            synchronized (this) {
+                wait();
+            }
+        }
         return result;
     }
 
     @Override
     public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException
     {
-        synchronized (this) { wait(); }
+        if (result == null) {
+            synchronized (this) {
+                wait();
+            }
+        }
         return result;
     }
 

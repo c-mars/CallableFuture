@@ -13,6 +13,8 @@ public class Main {
                 return "\"resulting status is "+integer+"\"";
             }
         });
+//        TODO: set arg value to unblock immediately
+//        callableFuture.setArg(12);
 
 //        this thread emulates outer callback that can be performed at anytime from outside
         System.out.println(">> callableFuture submitted to new thread");
